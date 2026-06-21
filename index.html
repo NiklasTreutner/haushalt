@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bundeshaushalt Visualisierung</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="app">
+    <div id="sidebar">
+      <button data-tab="bund">Bund</button>
+      <button data-tab="sozial">Sozialkassen</button>
+      <button data-tab="laender">Länder</button>
+      <button data-tab="gesamt">Alles zusammen</button>
+    </div>
+
+    <div id="main-container">
+      <div id="canvas-container">
+        <!-- nur EIN canvas -->
+        <canvas id="canvas"></canvas>
+        <div id="zoom-container">
+          <div id="panel-container">
+            <div id="nodes"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="summary">
+    <div>Einnahmen: <span id="total-income">0</span> Mrd. €</div>
+    <div>Ausgaben: <span id="total-expenses">0</span> Mrd. €</div>
+    <div>Saldo: <span id="balance">0</span> Mrd. €</div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/calculations.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/drawing.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
