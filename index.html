@@ -2,41 +2,85 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>Bundeshaushalt Visualisierung</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Staatsfinanzen – Übersicht</title>
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/pages.css">
 </head>
 <body>
-  <div id="app">
-    <div id="sidebar">
-      <button data-tab="bund">Bund</button>
-      <button data-tab="sozial">Sozialkassen</button>
-      <button data-tab="laender">Länder</button>
-      <button data-tab="gesamt">Alles zusammen</button>
-    </div>
+  <header id="topbar">
+    <a class="brand" href="#/" aria-label="Zur Übersicht">
+      <span class="brand-mark" aria-hidden="true">€</span>
+      <span class="brand-text">Staatsfinanzen<span class="brand-os">OS</span></span>
+    </a>
+    <nav id="section-nav" aria-label="Bereiche"></nav>
+  </header>
 
-    <div id="main-container">
-      <div id="canvas-container">
-        <!-- nur EIN canvas -->
-        <canvas id="canvas"></canvas>
-        <div id="zoom-container">
-          <div id="panel-container">
-            <div id="nodes"></div>
+  <div id="views">
+    <div id="view-haushalt" class="view" hidden>
+      <div id="app">
+        <aside id="sidebar">
+          <nav id="tabs" aria-label="Ansicht wählen">
+            <button type="button" data-tab="bund">Bund</button>
+            <button type="button" data-tab="sozial">Sozialkassen</button>
+            <button type="button" data-tab="laender">Länder</button>
+            <button type="button" data-tab="gesamt">Alles zusammen</button>
+          </nav>
+
+          <div id="sidebar-actions"></div>
+
+          <div id="ministry-index">
+            <label for="ministry-search" class="sidebar-heading">Ressorts</label>
+            <input type="search" id="ministry-search" placeholder="Ressort oder Posten suchen …" autocomplete="off">
+            <ul id="ministry-list" aria-label="Ressorts, nach Größe sortiert"></ul>
           </div>
+        </aside>
+
+        <main id="main-container">
+          <div id="canvas-container">
+            <canvas id="canvas" aria-hidden="true"></canvas>
+            <div id="zoom-container">
+              <div id="panel-container">
+                <div id="nodes"></div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <div id="zoom-controls" role="toolbar" aria-label="Zoom">
+          <button type="button" id="zoom-out" aria-label="Verkleinern" title="Verkleinern (−)">−</button>
+          <button type="button" id="zoom-level" title="Auf 100 % zurücksetzen">100 %</button>
+          <button type="button" id="zoom-in" aria-label="Vergrößern" title="Vergrößern (+)">+</button>
+          <button type="button" id="zoom-fit" title="Alles einpassen (0)">Einpassen</button>
         </div>
       </div>
-    </div>
-  </div>
 
-  <div id="summary">
-    <div>Einnahmen: <span id="total-income">0</span> Mrd. €</div>
-    <div>Ausgaben: <span id="total-expenses">0</span> Mrd. €</div>
-    <div>Saldo: <span id="balance">0</span> Mrd. €</div>
+      <div id="summary" aria-live="polite">
+        <div>Einnahmen: <span id="total-income">0</span> Mrd. €</div>
+        <div>Ausgaben: <span id="total-expenses">0</span> Mrd. €</div>
+        <div>Saldo: <span id="balance">0</span> Mrd. € <span id="balance-delta" class="delta-badge" hidden></span></div>
+      </div>
+    </div>
   </div>
 
   <script src="js/data.js"></script>
   <script src="js/calculations.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/drawing.js"></script>
+  <script src="js/scenarios.js"></script>
   <script src="js/main.js"></script>
+
+  <script src="js/tax.js"></script>
+  <script src="js/refdata.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/views/overview.js"></script>
+  <script src="js/views/haushalt.js"></script>
+  <script src="js/views/taxes.js"></script>
+  <script src="js/views/receipt.js"></script>
+  <script src="js/views/distribution.js"></script>
+  <script src="js/views/debt.js"></script>
+  <script src="js/views/pension.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>

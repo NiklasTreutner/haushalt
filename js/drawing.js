@@ -14,14 +14,13 @@ function drawLine(x1, y1, x2, y2, amount, maxAmount) {
     // skaliert von 1..14 px (you can tweak)
     w = Math.max(1, 1 + Math.pow(ratio, 0.6) * 13);
   }
-  ctx.lineWidth = w;
+  ctx.lineWidth = w * Math.max(zoomLevel, 0.4);
 
   ctx.stroke();
 }
 
 function drawConnections() {
-  // Canvas in CSS-Pixeln löschen (ctx arbeitet bereits in CSS-Pixel, dank initCanvas)
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  clearCanvas();
 
   // Erzeuge Map für schnelle Suche
   const nodeMap = Object.fromEntries(data.nodes.map(n => [n.id, n]));
@@ -82,9 +81,9 @@ function calculatePositions() {
   
   // First pass - calculate all node heights and widths
   data.nodes.forEach(node => {
-    const sliderCount = node.sliders?.length || 0;
+    const sliderCount = getVisibleRowCount(node);
     node.height = getNodeHeight(node);
-    node.width = baseNodeWidth * Math.min(3, Math.ceil(sliderCount / SLIDERS_PER_COLUMN));
+    node.width = baseNodeWidth * Math.max(1, Math.min(3, Math.ceil(sliderCount / SLIDERS_PER_COLUMN)));
   });
 
   function layoutNode(nodeId, xStart, y, level = 0) {
@@ -118,7 +117,7 @@ function calculatePositions() {
   const childrenLayouts = [];
 
   node.children.forEach((childId, index) => {
-    isRowStart = false;
+    let isRowStart = false;
     if(rowWidth > 1700)
     {
       isRowStart = true;
@@ -164,7 +163,10 @@ function calculatePositions() {
       node.children.forEach(childId => childIds.add(childId));
     }
   });
-  const rootNodes = data.nodes.filter(node => !childIds.has(node.id));
+  // Detailknoten haengen nicht im Baum, sondern werden frei neben ihrem
+  // Elternknoten platziert (manualPos) – sonst sprangen sie bei jedem
+  // Neuaufbau an den rechten Rand.
+  const rootNodes = data.nodes.filter(node => !childIds.has(node.id) && !node.isAdvanced);
 
   // Layout all root nodes (supports multiple trees)
   let currentX = 10;
@@ -178,36 +180,45 @@ function calculatePositions() {
     globalMaxY = Math.max(globalMaxY, layout.maxY);
   });
 
+  // Vom Nutzer verschobene Karten (und Detailknoten) behalten ihre Position
+  data.nodes.forEach(node => {
+    if (node.manualPos) {
+      node.x = node.manualPos.x;
+      node.y = node.manualPos.y;
+    }
+    globalMaxX = Math.max(globalMaxX, node.x + node.width);
+    globalMaxY = Math.max(globalMaxY, node.y + node.height);
+  });
+
   // Update content dimensions
   contentWidth = globalMaxX + 50; // Add some padding
   contentHeight = globalMaxY + 100; // Add space for summary
 }
 
+// Spaltenzahl aus der Anzahl sichtbarer Zeilen – von Layout und Rendering gemeinsam genutzt
+function getNodeColumns(visibleRowCount) {
+  return Math.max(1, Math.min(4, Math.ceil(visibleRowCount / SLIDERS_PER_COLUMN)));
+}
+
+function getVisibleRowCount(node) {
+  if (!isCardOpen(node) || isCollapsedNode(node)) return 0;
+  return getVisibleRows(node).length;
+}
+
 function getNodeHeight(node) {
+  // Nach dem Rendern gemessene Hoehe (siehe renderCurrentTab) – die Schaetzung
+  // unten dient nur dem ersten Durchlauf.
+  if (node.measuredHeight) return node.measuredHeight;
+
   const baseHeight = 70;
   const titleHeight = 30;
   const totalHeight = 30;
   const rowHeight = 35;
-  const slidersCount = node.sliders?.length || 0;
-  
-  const columns = Math.min(4, Math.ceil(slidersCount / SLIDERS_PER_COLUMN));
+  const variantRowHeight = node.variantOptions && node.variantOptions.length > 1 ? 34 : 0;
+  const slidersCount = getVisibleRowCount(node);
+
+  const columns = getNodeColumns(slidersCount);
   const rows = Math.ceil(slidersCount / columns);
-  
-  return baseHeight + titleHeight + (rows * rowHeight) + totalHeight;
-}
 
-function initCanvas() {
-  // Canvas CSS-Größe an Container anpassen
-  const rect = canvasContainer.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-
-  canvas.style.width = rect.width + "px";
-  canvas.style.height = rect.height + "px";
-
-  canvas.width = Math.round(rect.width * dpr);
-  canvas.height = Math.round(rect.height * dpr);
-
-  // Mappe Zeicheneinheiten so, dass 1 Einheit = 1 CSS-Pixel
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.lineCap = "round";
+  return baseHeight + titleHeight + variantRowHeight + (rows * rowHeight) + totalHeight;
 }
