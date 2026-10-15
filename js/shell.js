@@ -54,26 +54,35 @@ function budgetSnapshot() {
   };
 }
 
-function bundSlider(nodeId, labelRe) {
-  const node = datasets.bund.nodes.find(n => n.id === nodeId);
+function findSlider(dsKey, nodeId, labelRe) {
+  const node = datasets[dsKey].nodes.find(n => n.id === nodeId);
   return node && node.sliders.find(s => labelRe.test(s.label));
 }
 
-// Setzt einen Regler im Bund-Datensatz von außen (z. B. Steuerreform aus dem
+function bundSlider(nodeId, labelRe) {
+  return findSlider("bund", nodeId, labelRe);
+}
+
+// Setzt einen Regler in einem Datensatz von außen (z. B. Steuerreform aus dem
 // Steuerbereich). Ein offenes oder gemerktes Detailmodell würde den Wert sonst
 // beim nächsten Rendern wieder überschreiben und wird deshalb verworfen.
-function setBundSlider(nodeId, labelRe, value) {
-  const node = datasets.bund.nodes.find(n => n.id === nodeId);
+function setSliderIn(dsKey, nodeId, labelRe, value) {
+  const ds = datasets[dsKey];
+  const node = ds.nodes.find(n => n.id === nodeId);
   const slider = node && node.sliders.find(s => labelRe.test(s.label));
   if (!slider) return false;
   if (slider.advanced) {
     const advId = typeof slider.advanced === "string" ? slider.advanced : advancedIdFor(node.id, slider);
-    datasets.bund.nodes = datasets.bund.nodes.filter(n => n.id !== advId);
-    if (datasets.bund.closedAdvancedNodes) delete datasets.bund.closedAdvancedNodes[advId];
+    ds.nodes = ds.nodes.filter(n => n.id !== advId);
+    if (ds.closedAdvancedNodes) delete ds.closedAdvancedNodes[advId];
   }
   slider.value = roundBetrag(value);
-  if (currentTab === "bund") data = datasets.bund;
+  if (currentTab === dsKey) data = ds;
   return true;
+}
+
+function setBundSlider(nodeId, labelRe, value) {
+  return setSliderIn("bund", nodeId, labelRe, value);
 }
 
 function baselineBundSlider(nodeId, labelRe) {

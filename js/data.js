@@ -468,11 +468,11 @@ const datasets = {
 			  key: "zwei-zonen",
 			  label: "Standardmodell (zweizoniger Tarif wie § 32a EStG)",
 			  sliders: [
-				{ label: "Grundfreibetrag", id: "freibetrag", value: 10908, max: 50000, step: 100 },
+				{ label: "Grundfreibetrag", id: "freibetrag", value: 12348, max: 50000, step: 1 },
 				{ label: "Eingangssteuersatz (%)", id: "eingangssatz", value: 14, max: 50, step: 0.1 },
-				{ label: "Progressionsgrenze", id: "progressionsgrenze", value: 68480, max: 200000, step: 500 },
+				{ label: "Progressionsgrenze", id: "progressionsgrenze", value: 69879, max: 200000, step: 1 },
 				{ label: "Max. Steuersatz (%)", id: "max_rate", value: 42, max: 100, step: 0.1 },
-				{ label: "Top-Tax ab", id: "top_threshold", value: 277000, max: 1000000, step: 1000 },
+				{ label: "Top-Tax ab", id: "top_threshold", value: 277826, max: 1000000, step: 1 },
 				{ label: "Top-Tax-Satz (%)", id: "top_rate", value: 45, max: 100, step: 0.1 }
 			  ],
 			  formula: `
@@ -497,33 +497,23 @@ const datasets = {
 					{ einkommen: 1000000, anzahl: 16_000 }      // obere 0,05 %
 				];
 
-				// Linear-progressiver Tarif in zwei Zonen wie § 32a EStG: der Grenzsteuersatz
-				// steigt zunächst steil vom Eingangssatz auf den Knickwert, danach flacher
-				// bis zum Spitzensteuersatz. Bildet den echten Tarif auf ±2 % genau ab.
-				const KNICK_ANTEIL = 0.10;  // Lage des Knicks in der Progressionszone
-				const KNICK_SATZ = 24;      // Grenzsteuersatz am Knick (%)
-
+				// Tarif 2026 nach § 32a EStG aus js/tax.js (incomeTax), mit den Reglerwerten
+				// als Parametern. Der Knick (Grenzsteuersatz 23,97 %) liegt im amtlichen Tarif
+				// 5.451 € über dem Grundfreibetrag; bei verschobenen Grenzen wandert er anteilig mit.
 				const spanne = Math.max(1, progressionsgrenze - freibetrag);
-				const zoneA = spanne * KNICK_ANTEIL;        // Breite der ersten Progressionszone
-				const zoneB = spanne - zoneA;               // Breite der zweiten
-				const knick = freibetrag + zoneA;
-				const steuerAmKnick = zoneA * (eingangssatz + KNICK_SATZ) / 200;
-				const steuerAnGrenze = steuerAmKnick + zoneB * (KNICK_SATZ + max_rate) / 200;
-
-				function tarif(zvE) {
-				  if (zvE <= freibetrag) return 0;
-				  if (zvE <= knick) {
-					const d = zvE - freibetrag;
-					return d * (eingangssatz + (KNICK_SATZ - eingangssatz) * d / (2 * zoneA)) / 100;
-				  }
-				  if (zvE <= progressionsgrenze) {
-					const d = zvE - knick;
-					return steuerAmKnick + d * (KNICK_SATZ + (max_rate - KNICK_SATZ) * d / (2 * zoneB)) / 100;
-				  }
-				  let steuer = steuerAnGrenze + max_rate / 100 * (zvE - progressionsgrenze);
-				  if (zvE > top_threshold) steuer += (top_rate - max_rate) / 100 * (zvE - top_threshold);
-				  return steuer;
-				}
+				const basisSpanne = TAX_BASE.spitzeAb - TAX_BASE.freibetrag;
+				const p = {
+				  ...TAX_BASE,
+				  freibetrag,
+				  eingangssatz,
+				  knickAbstand: TAX_BASE.knickAbstand * spanne / basisSpanne,
+				  progEndeSatz: max_rate,
+				  spitzeAb: progressionsgrenze,
+				  spitzensatz: max_rate,
+				  reichAb: top_threshold,
+				  reichsatz: top_rate
+				};
+				const tarif = zvE => incomeTax(zvE, p);
 
 				let gesamtsteuer = 0;
 				for (const gruppe of einkommensverteilung) {
@@ -532,8 +522,8 @@ const datasets = {
 
 				const anteil_bund = 42.5;  // Bund 42,5 %, Länder 42,5 %, Gemeinden 15 %
 				// Kalibrierung: die 17 Einkommensklassen bilden Ehegattensplitting und die
-				// Streuung innerhalb der Klassen nicht ab und untertreffen das Ist um rd. 18 %.
-				const KALIBRIERUNG = 1.18196;
+				// Streuung innerhalb der Klassen nicht ab und untertreffen das Ist um rd. 24 %.
+				const KALIBRIERUNG = 1.24234;
 				return gesamtsteuer * anteil_bund / 100 / 1e9 * KALIBRIERUNG;
 			  `
 			},
@@ -542,11 +532,11 @@ const datasets = {
 			  label: "Alternativmodell (linearer Grenzsteuersatz, kein Tarifknick)",
 			  note: "Vereinfachung ohne den Knick des echten Tarifs: der Grenzsteuersatz steigt gleichmäßig vom Eingangs- bis zum Spitzensatz. Trifft das Soll 2027 bei unveränderten Reglern ebenso genau, verteilt die Wirkung von Änderungen aber gleichmäßiger über alle Einkommen statt stärker im unteren Mittelfeld.",
 			  sliders: [
-				{ label: "Grundfreibetrag", id: "freibetrag", value: 10908, max: 50000, step: 100 },
+				{ label: "Grundfreibetrag", id: "freibetrag", value: 12348, max: 50000, step: 1 },
 				{ label: "Eingangssteuersatz (%)", id: "eingangssatz", value: 14, max: 50, step: 0.1 },
-				{ label: "Progressionsgrenze", id: "progressionsgrenze", value: 68480, max: 200000, step: 500 },
+				{ label: "Progressionsgrenze", id: "progressionsgrenze", value: 69879, max: 200000, step: 1 },
 				{ label: "Max. Steuersatz (%)", id: "max_rate", value: 42, max: 100, step: 0.1 },
-				{ label: "Top-Tax ab", id: "top_threshold", value: 277000, max: 1000000, step: 1000 },
+				{ label: "Top-Tax ab", id: "top_threshold", value: 277826, max: 1000000, step: 1 },
 				{ label: "Top-Tax-Satz (%)", id: "top_rate", value: 45, max: 100, step: 0.1 }
 			  ],
 			  formula: `
@@ -589,7 +579,7 @@ const datasets = {
 				}
 
 				const anteil_bund = 42.5;
-				const KALIBRIERUNG = 1.36317;
+				const KALIBRIERUNG = 1.435925;
 				return gesamtsteuer * anteil_bund / 100 / 1e9 * KALIBRIERUNG;
 			  `
 			}

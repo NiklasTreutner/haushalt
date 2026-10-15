@@ -95,7 +95,9 @@ const VIEW_DESCRIPTIONS = {
   quittung: "Ihre persönliche Steuerquittung: wofür der Bund Ihr Geld ausgibt.",
   verteilung: "Wie Einkommen und Vermögen verteilt sind – und wo Sie selbst stehen.",
   schulden: "Schuldenstand, Zinslast und was steigende Zinsen für den Haushalt bedeuten.",
-  rente: "Alternde Gesellschaft, Beitragssatz und Bundeszuschuss – der größte Einzelposten im Blick."
+  rente: "Alternde Gesellschaft, Beitragssatz, Bundeszuschuss – und was passiert, wenn alle einzahlen.",
+  subventionen: "Finanzhilfen, Steuervergünstigungen und EU-Mittel – streichen und in den Haushalt übernehmen.",
+  gesundheit: "Beitragsbemessungsgrenze, PKV und die Bürgerversicherung im Szenario-Vergleich."
 };
 
 function card(title, sub) {

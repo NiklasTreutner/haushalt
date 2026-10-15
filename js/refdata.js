@@ -99,7 +99,104 @@ const REF = {
     { land: "Polen", wert: 87 }, { land: "Rumänien", wert: 95 }
   ],
 
+  // ── Subventionen ──
+  // Finanzhilfen: Posten des Bundeshaushalts (Werte kommen live aus den Reglern)
+  finanzhilfen: [
+    { label: /^Strompreisentlastung$/, name: "Strompreisentlastung", kat: "Energie" },
+    { label: /^Gebäudeförderung$/, name: "Förderung effizienter Gebäude (KTF)", kat: "Klima & Gebäude" },
+    { label: /^Strompreisentlastung Industrie$/, name: "Strompreiskompensation Industrie (KTF)", kat: "Energie" },
+    { label: /^Übertragungsnetzkosten$/, name: "Zuschuss Übertragungsnetzentgelte (KTF)", kat: "Energie" },
+    { label: /^Digitalisierung und Mikroelektronik$/, name: "Chipfabriken und Digitalisierung (SVIK)", kat: "Industrie" },
+    { label: /^Wasserstoff und Dekarbonisierung$/, name: "Wasserstoff und Klimaschutzverträge (KTF)", kat: "Industrie" },
+    { label: /^Kohleregionen und Strukturhilfen$/, name: "Strukturhilfen Kohleregionen", kat: "Regionen" },
+    { label: /^Sozialer Wohnungsbau$/, name: "Sozialer Wohnungsbau", kat: "Wohnen" },
+    { label: /^Alterssicherung der Landwirte$/, name: "Alterssicherung der Landwirte", kat: "Landwirtschaft" },
+    { label: /^Ladeinfrastruktur und E-Mobilität$/, name: "Ladeinfrastruktur und E-Mobilität (KTF)", kat: "Verkehr" },
+    { label: /^Industrie und Mittelstand$/, name: "Industrie- und Mittelstandsförderung", kat: "Industrie" },
+    { label: /^Krankenversicherung der Landwirte$/, name: "Krankenversicherung der Landwirte", kat: "Landwirtschaft" },
+    { label: /^Regionale Wirtschaftsförderung$/, name: "Regionale Wirtschaftsförderung (GRW)", kat: "Regionen" },
+    { label: /^Agrarstruktur und Küstenschutz$/, name: "Agrarstruktur und Küstenschutz (GAK)", kat: "Landwirtschaft" },
+    { label: /^Baukindergeld und Prämien$/, name: "Wohneigentumsförderung und Prämien", kat: "Wohnen" }
+  ],
+  // Steuervergünstigungen: Mindereinnahmen aller Ebenen pro Jahr (Mrd. €, Größenordnung)
+  // Quellen: Subventionsbericht der Bundesregierung, Umweltbundesamt (umweltschädliche Subventionen),
+  // Kiel Institut (Kieler Subventionsbericht), BMF; Spannen in den Hinweisen
+  steuerverguenstigungen: [
+    { id: "mwst7", name: "Ermäßigter Mehrwertsteuersatz", sub: "Lebensmittel, Bücher, Nahverkehr …", kosten: 35, steuer: "mwst",
+      note: "Kein Subventionsbegriff im engeren Sinn, wirkt sozial: entlastet Haushalte mit niedrigem Einkommen relativ am stärksten." },
+    { id: "splitting", name: "Ehegattensplitting", sub: "ggü. Individualbesteuerung", kosten: 20, steuer: "est",
+      note: "Schätzungen 15–25 Mrd. €, je nach Übergang und übertragbarem Grundfreibetrag." },
+    { id: "kerosin", name: "Steuerfreies Kerosin", sub: "Luftverkehr", kosten: 8.4, steuer: "energie",
+      note: "Für internationale Flüge nur über Abkommen änderbar; Inlandsflüge machen nur einen kleinen Teil aus." },
+    { id: "diesel", name: "Dieselprivileg", sub: "18,4 ct/l weniger Energiesteuer als Benzin", kosten: 8.2, steuer: "energie" },
+    { id: "pendler", name: "Entfernungspauschale", sub: "38 ct ab dem ersten Kilometer", kosten: 6.5, steuer: "est" },
+    { id: "erbschaft", name: "Verschonung von Betriebsvermögen", sub: "Erbschaft- und Schenkungsteuer", kosten: 6, steuer: "erbschaft",
+      note: "Große Unternehmensvermögen werden zu 85–100 % verschont; das Aufkommen steht den Ländern zu." },
+    { id: "dienstwagen", name: "Dienstwagenprivileg", sub: "pauschale 1-%-Regel", kosten: 4, steuer: "est", note: "Schätzungen 3–5,5 Mrd. €." },
+    { id: "gastro", name: "7 % auf Speisen in Restaurants", sub: "seit 2026", kosten: 3.6, steuer: "mwst" },
+    { id: "strom", name: "Stromsteuer-Senkung", sub: "produzierendes Gewerbe, Land- und Forstwirtschaft", kosten: 3.5, steuer: "strom" },
+    { id: "zuschlaege", name: "Steuerfreie Zuschläge", sub: "Sonntags-, Feiertags-, Nachtarbeit", kosten: 2.5, steuer: "est" },
+    { id: "agrardiesel", name: "Agrardiesel", sub: "Energiesteuer-Rückvergütung", kosten: 0.45, steuer: "energie" }
+  ],
+  // Wohin fließt das Aufkommen einer Steuer? Ziel-Regler und Anteil
+  steuerZiele: {
+    est: [{ ds: "bund", node: "fm", label: /^Einkommensteuer$/, anteil: 0.425 }, { ds: "laender", node: "laender", label: /^Lohn-\/Einkommensteuer/, anteil: 0.425 }],
+    mwst: [{ ds: "bund", node: "fm", label: /^Mehrwertsteuer$/, anteil: 0.50 }, { ds: "laender", node: "laender", label: /^Anteil Umsatzsteuer$/, anteil: 0.45 }],
+    energie: [{ ds: "bund", node: "fm", label: /^Energiesteuer$/, anteil: 1 }],
+    strom: [{ ds: "bund", node: "fm", label: /^Stromsteuer$/, anteil: 1 }],
+    erbschaft: [{ ds: "laender", node: "laender", label: /^Erbschaftsteuer$/, anteil: 1 }]
+  },
+  // EU-Mittel für Deutschland pro Jahr (Mrd. €, Durchschnitt der Förderperiode, gerundet)
+  // Quelle: EU-Kommission (Finanzberichte, Kohäsionsdaten), BMF; Auszahlungen schwanken stark
+  euMittel: [
+    { name: "Direktzahlungen an Landwirte", sub: "Gemeinsame Agrarpolitik, 1. Säule (EGFL)", wert: 4.9 },
+    { name: "Aufbau- und Resilienzfazilität", sub: "Corona-Aufbaufonds, rd. 28 Mrd. € bis 2026", wert: 4.0 },
+    { name: "Strukturfonds", sub: "EFRE, ESF+, Fonds für einen gerechten Übergang", wert: 2.6 },
+    { name: "Forschung", sub: "Horizont Europa", wert: 2.0 },
+    { name: "Ländliche Entwicklung", sub: "Gemeinsame Agrarpolitik, 2. Säule (ELER)", wert: 1.3 },
+    { name: "Sonstige Programme", sub: "Erasmus+, Connecting Europe, Verwaltung …", wert: 1.0 }
+  ],
+
+  // Gesetzliche und private Krankenversicherung 2026 (Mrd. €, gerundet)
+  // Quellen: BMG/GKV-Schätzerkreis (Ausgaben, Zusatzbeitrag), PKV-Verband (Versicherte),
+  // WIP (Mehrumsatz durch Privatversicherte); Einkommensgrößen der PKV-Versicherten: eigene Näherung
+  kv: {
+    ausgaben: 350,             // GKV-Ausgaben 2026
+    zuschuss: 14.5,            // Bundeszuschuss an den Gesundheitsfonds
+    satz: 17.5,                // 14,6 % allgemein + 2,9 % durchschnittlicher Zusatzbeitrag
+    bbg: 69750,                // Beitragsbemessungsgrenze KV/PV 2026 (€/Jahr)
+    vpg: 77400,                // Versicherungspflichtgrenze 2026
+    versicherte: 74.5e6,
+    pkvVoll: 8.7e6,            // Vollversicherte in der PKV
+    anteilGkvUeberBBG: 0.65,   // Anteil der Lohnsumme oberhalb der BBG, der auf GKV-Versicherte entfällt
+    anteilPkvUeberBBG: 0.45,   // dasselbe für Privatversicherte (Beamte, Selbstständige, Gutverdiener)
+    pkvBasisBisBBG: 280,       // Einkommen der PKV-Versicherten bis zur BBG
+    kapitalMiete: 160,         // Kapital- und Mieteinkünfte aller Versicherten
+    pkvMehrumsatz: 13,         // Mehrumsatz von Ärzten u. a. durch höhere PKV-Honorare
+    pkvBeispielMonat: 620,     // Beispielbeitrag PKV inkl. Pflege, 40 Jahre, mittlerer Tarif
+    pkvAnteile: [
+      { label: "Beamte, Pensionäre und Angehörige (Beihilfe)", wert: 50 },
+      { label: "Selbstständige", wert: 22 },
+      { label: "Angestellte über der Pflichtgrenze", wert: 18 },
+      { label: "Sonstige (Studierende, Rentner …)", wert: 10 }
+    ]
+  },
+  pv: {
+    satz: 3.6,                 // ohne Kinderlosenzuschlag
+    ppvVersicherte: 9.2e6,     // private Pflegepflichtversicherung
+    ppvKostenfaktor: 0.6       // jüngere Versichertenstruktur: rd. 60 % der Pro-Kopf-Kosten der SPV
+  },
+
   rente: {
+    bbg: 101400,               // Beitragsbemessungsgrenze RV 2026
+    // Bislang nicht pflichtversicherte Gruppen, beitragspflichtige Einkommen in Mrd. € (Näherung)
+    neueGruppen: {
+      beamte: 105,             // rd. 1,9 Mio. aktive Beamte, Richter, Soldaten
+      selbststaendige: 120,    // rd. 3 Mio. nicht abgesicherte Selbstständige
+      versorgungswerke: 85,    // Ärzte, Anwälte, Architekten … (rd. 1,1 Mio.)
+      ueberBBG: 35             // deren Einkommen oberhalb der BBG
+    },
+    beamteAktiv: 1.9e6,
     beitragssatz2026: 18.6,
     niveau2026: 48,
     beitragsbasis2026: 1610,  // beitragspflichtige Entgelte, Mrd. € (ca., aus 300 Mrd. Beitragseinnahmen)
